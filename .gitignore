@@ -1,0 +1,17 @@
+# ignore the following folder
+ILC_RTX_Side/.vs/
+ILC_RTX_Side/Debug/
+ILC_RTX_Side/x64/
+ILC_RTX_Side/ILC_RTX_Side/x64/
+
+ILC_WINDOWS_SIDE/.vs/
+ILC_WINDOWS_SIDE/x64/
+ILC_WINDOWS_SIDE/ILC_DLL/x64/
+ILC_WINDOWS_SIDE/ILC_WINDOWS_SIDE/x64
+
+# ignore the following files
+*.sln
+*.db
+*.opendb
+*.vcxproj
+*.filters
