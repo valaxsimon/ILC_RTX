@@ -14,7 +14,7 @@
 
 //Units
 #define ITP_REF_MODE 1 //reference mode
-#define ROTARY 1
+#define ROTARY 0
 #define USE_SLAVE 0
 
 #define MAX_ROW_COUNT 340000 //use this to avoid looking in file how much line and how much memory to allocate at first

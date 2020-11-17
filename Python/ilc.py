@@ -25,14 +25,14 @@ timeStamps = (c_double * nTotal)()
 	
 forward = (c_double * nTotal)()
 for i in range(0,nelem):
-	forward[i] = i / (nelem-1);
+	forward[i] = i / (nelem-1)/1000;
 	
 for i in range(nelem, nTotal):
 	forward[i] = forward[nelem-1];
 
 backward = (c_double * nTotal)()
 for i in range(nelem-1,-1,-1):
-	backward[nelem - i - 1] = i / (nelem-1);
+	backward[nelem - i - 1] = i / (nelem-1)/1000;
 	
 for i in range(nelem,nTotal):
 	backward[i] = backward[nelem-1];
