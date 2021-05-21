@@ -83,7 +83,7 @@ public:
 	//drives
 	/* copy/paste FROM OLD CODE developped from MEI */
 
-	int gZAxisDriveNumber = 0;
+	int gZAxisDriveNumber = 2;
 	int gZAxisSlaveDriveNumber = 1;
 	const char* connectString = "etb:ultimet";
 	//const char* connectString = "etb:etn://localhost:1140";

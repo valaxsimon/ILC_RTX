@@ -27,6 +27,7 @@ void main()
 			READ_HDR(&hdr); //first read the header to find the message type and data length, blocks until a message is ready
 			if (hdr.mType == _START)
 			{
+				break;
 				//allocate memory for the data length (trajectory)
 				int nNewElem = hdr.mLen / sizeof(double);
 				if (ML0 == NULL)
