@@ -38,9 +38,11 @@ void main()
 
 		int n = 1000;
 		double* forward = new double[n];
+		double* forwardFFWcurrent = new double[n];
 		for (int i = 0; i <n; ++i)
 		{
 			forward[i] = (double)i / (double)n;
+			forwardFFWcurrent[i] = (double)i * 1e-6;
 		}
 
 		double* backward = new double[n];
@@ -63,6 +65,7 @@ void main()
 			if (i % 2 == 0)
 			{
 				WRITE_MSG(&h, (char*)forward);
+				WRITE_MSG(&h, (char*)forwardFFWcurrent);
 				//timestamps
 				READ_HDR(&h);
 				READ_MSG(timeStamps);
@@ -77,18 +80,18 @@ void main()
 			}
 			else
 			{
-				WRITE_MSG(&h, (char*)backward);
-				//timestamps
-				READ_HDR(&h);
-				READ_MSG(timeStamps);
+				//WRITE_MSG(&h, (char*)backward);
+				////timestamps
+				//READ_HDR(&h);
+				//READ_MSG(timeStamps);
 
-				//ml0
-				READ_HDR(&h);
-				READ_MSG(ml0);
+				////ml0
+				//READ_HDR(&h);
+				//READ_MSG(ml0);
 
-				//ml1
-				READ_HDR(&h);
-				READ_MSG(ml1);
+				////ml1
+				//READ_HDR(&h);
+				//READ_MSG(ml1);
 			}
 		}
 

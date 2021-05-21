@@ -38,7 +38,7 @@ def convert_to_c_double_type(array):
 #load the dll
 ilcDll = ctypes.WinDLL("C:\\ABR\\ILC\\ILC_WINDOWS_SIDE\\x64\\Debug\\ILC_DLL.dll");
 CExecuteTrajectory = ilcDll.CExecuteTrajectory
-CExecuteTrajectory.argtypes = POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int)
+CExecuteTrajectory.argtypes = POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int)
 CExecuteTrajectory.restype = c_int
 
 #how long after theoretical mvt we want to monitor rtv values
@@ -46,8 +46,9 @@ samplingTime = 50e-6
 nextraSecond = 0.2
 
 #prepare the trajectory data
-df = pd.read_csv('theoTrajLKT.txt')
+df = pd.read_csv('theoTrajLKT1mmVulc1_X.txt')
 forward = convert_to_c_double_type(df['M0 in meter'].values)
+ffwCurrentForward = convert_to_c_double_type(df['MF231 in A'].values)
 
 nTotal = len(df['M0 in meter'].values)
 timeStamps = (c_double * nTotal)()
@@ -62,20 +63,20 @@ ml1Data = []
 
 #line_ml0, line_ml1, axes = plot_iteration_results(timeStampsData, ml0Data, ml1Data)
 
-plt.show()
+#plt.show()
 axes = plt.gca()
 
 line_ml0, = axes.plot(timeStampsData, ml0Data, 'g+')
 line_ml1, = axes.plot(timeStampsData, ml1Data, 'r+')
 #maxY = 0;
 
-nexecution = 5;
+nexecution = 2;
 for i in range(0,nexecution*2):
 	print("forward: ",end = '')
 	print(i)
 	print(c_nTotal)
 
-	CExecuteTrajectory(timeStamps, forward, ml1, byref(c_nTotal))
+	CExecuteTrajectory(timeStamps, forward, ffwCurrentForward, ml1, byref(c_nTotal))
 	for j in range(0,nTotal):
 		timeStampsData.append(timeStamps[j]*samplingTime)
 		ml0Data.append(forward[j])

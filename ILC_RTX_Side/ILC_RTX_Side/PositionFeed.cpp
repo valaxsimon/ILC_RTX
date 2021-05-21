@@ -9,6 +9,7 @@ void rtvHandlerCallback(DSA_DSMAX *pUltimet, int nCycle, int nb_read, DSA_RTV_DA
 	eint64 ml0;
 	//timeStamp();
 	int rtvVal;
+	float rtvCurrFfwVal;
 	int err;
 	if (rPositionFeed->rtvInterruptNumber < rPositionFeed->gTrajectory.mLineNumber)
 	{
@@ -32,6 +33,14 @@ void rtvHandlerCallback(DSA_DSMAX *pUltimet, int nCycle, int nb_read, DSA_RTV_DA
 				DSA_DIAG(err, rPositionFeed->ultimet);
 				rPositionFeed->errHandler(err);
 			}
+		}
+		// Write the current FFW value
+		rtvCurrFfwVal = rPositionFeed->gTrajectory.mCurrent[rPositionFeed->rtvInterruptNumber] * rPositionFeed->curIsoToInc;
+		if(err = dsa_write_rtv_float32(rPositionFeed->curFfwRefData, rtvCurrFfwVal))
+		//if (err = dsa_write_32bit_rtv_slot(rPositionFeed->curFfwRefSlot, rtvCurrFfwVal))
+		{
+			DSA_DIAG(err, rPositionFeed->ultimet);
+			rPositionFeed->errHandler(err);
 		}
 
 		if (err = dsa_read_rtv_int64(rPositionFeed->gML0Slot, &ml0)) //extract the real trajectory values back to the PC
@@ -86,10 +95,10 @@ PositionFeed::~PositionFeed()
 	destroyDrives();
 }
 
-void PositionFeed::writeToDrive(double* position, int n)
+void PositionFeed::writeToDrive(double* position, double* current, int n)
 {
 	gTrajectory.clear();
-	gTrajectory.create(position, n);
+	gTrajectory.create(position, current, n);
 	clearDriveErrors();
 	powerOn();
 	moveToStartingPos();
@@ -194,7 +203,7 @@ void PositionFeed::setupRTVSlots()
 
 	gSlotDestroyed = false;
 
-	if (err = dsa_assign_slot_to_register_s(x, posRefSlot, DMD_TYP_MONITOR_INT32, 450, 0, DSA_DEF_TIMEOUT)) //MF450 will be the external position
+	if (err = dsa_assign_slot_to_register_s(x, posRefSlot, DMD_TYP_MONITOR_INT32, 450, 0, DSA_DEF_TIMEOUT)) //M450 will be the external position
 	{
 		DSA_DIAG(err, x);
 		errHandler(err);
@@ -213,12 +222,43 @@ void PositionFeed::setupRTVSlots()
 
 	if (USE_SLAVE == 1)
 	{
-		if (err = dsa_assign_slot_to_register_s(x, posSlaveRefSlot, DMD_TYP_MONITOR_INT32, 451, 0, DSA_DEF_TIMEOUT)) //MF450 will be the external position
+		if (err = dsa_assign_slot_to_register_s(x, posSlaveRefSlot, DMD_TYP_MONITOR_INT32, 451, 0, DSA_DEF_TIMEOUT)) //M451 will be the external position
 		{
 			DSA_DIAG(err, x);
 			errHandler(err);
 		}
 	}
+
+	// Setup the current reference MF452 for current FFW value
+	if(err = dsa_create_rtv_write(ultimet, DMD_INCREMENT_FLOAT32, &curFfwRefData))
+	{
+		DSA_DIAG(err, ultimet);
+		errHandler(err);
+	}
+	// Setup the current reference MF452 for current FFW value
+	//if (err = dsa_get_32bit_rtv0_slot(ultimet, &curFfwRefSlot))
+	//{
+	//	DSA_DIAG(err, ultimet);
+	//	errHandler(err);
+	//}
+	if(err = dsa_get_rtv_slot_of_rtv(curFfwRefData, &curFfwRefSlot))
+	{
+		DSA_DIAG(err, ultimet);
+		errHandler(err);
+	}
+
+	gSlotDestroyed = false;
+
+	if (err = dsa_assign_slot_to_register_s(x, curFfwRefSlot, DMD_TYP_MONITOR_FLOAT32, 452, 0, DSA_DEF_TIMEOUT)) //MF452 will be the external position
+	{
+		DSA_DIAG(err, x);
+		errHandler(err);
+	}
+	// get the RTV slot number to pass it to the feedforward function RTVFFWD
+	int ffwSlotnubmer;
+	if(err = dsa_get_32bit_rtv_slot_nr(curFfwRefSlot, &ffwSlotnubmer)){ DSA_DIAG(err, x); errHandler(err); }
+	if(err = dsa_execute_command_d_s(x,228,DMD_TYP_IMMEDIATE, ffwSlotnubmer,false,true,DSA_DEF_TIMEOUT)) { DSA_DIAG(err, x); errHandler(err); }
+	if(err = dsa_set_register_float32_s(x,DMD_TYP_PPK_FLOAT32,249,0,1.0,DSA_DEF_TIMEOUT)) { DSA_DIAG(err, x); errHandler(err); } // set KF249 (position feedforward gain to 1.0f (1A = 1RTV INC))
 
 	//MONITORINGS: Set-up the RTV for reading ML1 and ML0 position back from the AccurET through TransnET so we can compare on Matlab
 	if (err = dsa_create_rtv_read(x, DMD_TYP_MONITOR_INT64, 1, 0, &gML1Slot))
@@ -256,6 +296,15 @@ void PositionFeed::startCustomerTrajectory()
 			DSA_DIAG(err, ultimet);
 			errHandler(err);
 		}
+	}
+
+	//write first rtv curFfwRefSlot in MF452 of axis (first value is 0 for the moment)
+	float rtvCurVal;
+	rtvCurVal = gTrajectory.mCurrent[0] * curIsoToInc;
+	if (err = dsa_write_rtv_float32(curFfwRefData, rtvVal))
+	{
+		DSA_DIAG(err, ultimet);
+		errHandler(err);
 	}
 
 	//set x1 = 1 for ComET monitoring purposes so we start the acquisition
@@ -595,6 +644,7 @@ void PositionFeed::createDrives()
 		}
 
 		isoToInc = ceil(M241 * pCod / 360.0);
+
 	}
 	else
 	{
@@ -614,6 +664,11 @@ void PositionFeed::createDrives()
 
 		isoToInc = ceil(M241 / (pCod * 1e-9));
 	}
+
+	// Compute current conversion
+	int M82;
+	if (err = dsa_get_register_int32_s(x, DMD_TYP_MONITOR, 82, 0, &M82, DSA_GET_CURRENT, DSA_DEF_TIMEOUT));
+	curIsoToInc = 32768 / (M82 / 100);
 }
 
 void PositionFeed::powerOff()

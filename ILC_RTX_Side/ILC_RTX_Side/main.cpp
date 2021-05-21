@@ -19,6 +19,7 @@ void main()
 		RtPrintf("Drive initiated successfully\nYou can start the windows side application\n");
 		int nElem;
 		double* ML0 = NULL;
+		double* MF231 = NULL;
 		double* ML1 = NULL;
 		double* timeStamps = NULL;
 		MsgHeader hdr; //messages going through the RTX - Windows shared memory dual communication channel will have this header, it can be changed to tailor user needs
@@ -27,13 +28,13 @@ void main()
 			READ_HDR(&hdr); //first read the header to find the message type and data length, blocks until a message is ready
 			if (hdr.mType == _START)
 			{
-				break;
 				//allocate memory for the data length (trajectory)
 				int nNewElem = hdr.mLen / sizeof(double);
 				if (ML0 == NULL)
 				{
 					nElem = nNewElem;
 					ML0 = (double*) malloc(sizeof(double) * nElem);
+					MF231 = (double*) malloc(sizeof(double) * nElem);
 					ML1 = (double*)malloc(sizeof(double) * nElem);
 					timeStamps = (double*)malloc(sizeof(double) * nElem);
 				}
@@ -43,6 +44,7 @@ void main()
 					{
 						nElem = nNewElem;
 						ML0 = (double*)realloc(ML0, sizeof(double) * nElem);
+						MF231 = (double*)malloc(sizeof(double) * nElem);
 						ML1 = (double*)realloc(ML1, sizeof(double) * nElem);
 						timeStamps = (double*)realloc(timeStamps, sizeof(double) * nElem);
 					}
@@ -52,8 +54,12 @@ void main()
 					}
 				}
 
-				READ_MSG(ML0); //now we allocated the moemory for ML0 => read the trajectory
-				pFeeder.writeToDrive(ML0, nElem); //start feeding the trajectory to the drive, blocks until the trajectory has finished executing
+				READ_MSG(ML0); //now we allocated the memory for ML0 => read the trajectory
+				/*MsgHeader h;
+				READ_HDR(&h);*/
+				READ_HDR(&hdr);
+				READ_MSG(MF231); //now we allocated the memory for MF231 => read the trajectory
+				pFeeder.writeToDrive(ML0, MF231, nElem); //start feeding the trajectory to the drive, blocks until the trajectory has finished executing
 				pFeeder.readFromDrive(timeStamps, ML0, ML1, &nElem); //copy back RTV of interest that were saved during each callback during trajectory execution
 
 				//send the values back to Windows

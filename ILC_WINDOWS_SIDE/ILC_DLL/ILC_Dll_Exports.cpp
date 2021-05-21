@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-int CExecuteTrajectory(double* timeStamps, double* ml0, double* ml1, int* n)
+int CExecuteTrajectory(double* timeStamps, double* ml0, double* mf231, double* ml1, int* n)
 {
 	try
 	{
@@ -14,6 +14,9 @@ int CExecuteTrajectory(double* timeStamps, double* ml0, double* ml1, int* n)
 		h.mType = _START;
 		h.mLen = sizeof(double) * (*n);
 		WRITE_MSG(&h, (char*)ml0);
+		// !!!!!!!!!! Try to add a second message to the set the current FFW values !!!!!!!!!
+		//READ_HDR(&h);
+		WRITE_MSG(&h, (char*)mf231);
 
 		//read back from RTX
 

@@ -32,6 +32,7 @@ class CustomerTrajectory
 public:
 	//input values
 	double* mPosition;
+	double* mCurrent;
 
 	//output values
 	double* mML1;
@@ -54,19 +55,22 @@ public:
 		if (mPosition != NULL)
 		{
 			delete mPosition;
+			delete mCurrent;
 			delete mML0;
 			delete mML1; //in c++11 can now delete a null pointer
 			delete mTimeStamps;
 		}
 	}
 
-	void create(double* position, int n)
+	void create(double* position, double* current, int n)
 	{
 		mML0 = new double[n];
 		mML1 = new double[n];
 		mTimeStamps = new double[n];
 		mPosition = new double[n];
+		mCurrent = new double[n];
 		memcpy(mPosition, position, sizeof(double)*n);
+		memcpy(mCurrent, current, sizeof(double)*n);
 		mLineNumber = n;
 	}
 };
@@ -76,7 +80,7 @@ class PositionFeed
 public:
 	PositionFeed();
 	~PositionFeed();
-	void writeToDrive(double* position, int n);//will start the trajectory
+	void writeToDrive(double* position, double* current, int n);//will start the trajectory
 	void readFromDrive(double* timeStamps, double* ml0, double* ml1, int* n); //will block until the trajectory is completed;
 
 	
@@ -92,6 +96,8 @@ public:
 	DSA_MASTER *ultimet = NULL;
 	DSA_RTV_SLOT *posRefSlot = NULL;
 	DSA_RTV_SLOT *posSlaveRefSlot = NULL;
+	DSA_RTV_DATA *curFfwRefData = NULL;
+	DSA_RTV_SLOT *curFfwRefSlot = NULL;
 	DSA_RTV_DATA * gML1Slot = NULL;
 	DSA_RTV_DATA * gML0Slot = NULL;
 	int gSlotDestroyed = false;
@@ -107,6 +113,7 @@ public:
 	CustomerTrajectory gTrajectory;
 
 	long long isoToInc = 0; //either degtoinc or mtoinc 
+	double curIsoToInc = 0.0;
 	double unitsConversionFactor = 1e-6; //we consider all trajectories are given in m or deg so we need an adjustement factor if it's given in mm or turn or something else to convert back to m or deg
 	int gSampleRate = 1; // 1 = 100us, 2 = 200us etc
 
