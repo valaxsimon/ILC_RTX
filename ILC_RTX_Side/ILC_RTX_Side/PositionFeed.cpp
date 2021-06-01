@@ -11,6 +11,9 @@ void rtvHandlerCallback(DSA_DSMAX *pUltimet, int nCycle, int nb_read, DSA_RTV_DA
 	int rtvVal;
 	float rtvCurrFfwVal;
 	int err;
+
+	FILE* f;
+
 	if (rPositionFeed->rtvInterruptNumber < rPositionFeed->gTrajectory.mLineNumber)
 	{
 		//if (rtvInterruptNumber<MAX_TIMESTAMPS)
@@ -18,6 +21,10 @@ void rtvHandlerCallback(DSA_DSMAX *pUltimet, int nCycle, int nb_read, DSA_RTV_DA
 		//start executing one point of the customer trajectory each callback
 
 		rtvVal = rPositionFeed->gTrajectory.mPosition[rPositionFeed->rtvInterruptNumber] * rPositionFeed->isoToInc;
+
+		//for (int i = 0; i < rPositionFeed->gTrajectory.mLineNumber; i++) {
+		//	printf("%lf\n", rPositionFeed->gTrajectory.mPosition[i] * rPositionFeed->isoToInc);
+		//}
 
 		if (err = dsa_write_32bit_rtv_slot(rPositionFeed->posRefSlot, rtvVal))
 		{

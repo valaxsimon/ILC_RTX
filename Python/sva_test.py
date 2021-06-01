@@ -36,7 +36,7 @@ def convert_to_c_double_type(array):
         
 
 #load the dll
-ilcDll = ctypes.WinDLL("C:\\ABR\\ILC\\ILC_WINDOWS_SIDE\\x64\\Debug\\ILC_DLL.dll");
+ilcDll = ctypes.WinDLL("C:\\Code\\ABR\\ILC\\ILC_WINDOWS_SIDE\\x64\\Debug\\ILC_DLL.dll");
 CExecuteTrajectory = ilcDll.CExecuteTrajectory
 CExecuteTrajectory.argtypes = POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int)
 CExecuteTrajectory.restype = c_int

@@ -7,7 +7,8 @@
 //
 // To compile and run this project map u: to EDI RTX64 path 
 // subst U: C:\EDI\EDI-rtx64-VisualStudio2015-c-4.22A\EDI-4.22A
-//
+// subst U: C:\EDI\EDI-4.24A-rtx64_3-vs2015-c\EDI-4.24A
+// 
 //=================================================================
 
 void main()
@@ -19,6 +20,7 @@ void main()
 		RtPrintf("Drive initiated successfully\nYou can start the windows side application\n");
 		int nElem;
 		double* ML0 = NULL;
+		double* ML0_read = NULL;
 		double* MF231 = NULL;
 		double* ML1 = NULL;
 		double* timeStamps = NULL;
@@ -34,6 +36,7 @@ void main()
 				{
 					nElem = nNewElem;
 					ML0 = (double*) malloc(sizeof(double) * nElem);
+					ML0_read = (double*)malloc(sizeof(double) * nElem);
 					MF231 = (double*) malloc(sizeof(double) * nElem);
 					ML1 = (double*)malloc(sizeof(double) * nElem);
 					timeStamps = (double*)malloc(sizeof(double) * nElem);
@@ -44,7 +47,8 @@ void main()
 					{
 						nElem = nNewElem;
 						ML0 = (double*)realloc(ML0, sizeof(double) * nElem);
-						MF231 = (double*)malloc(sizeof(double) * nElem);
+						ML0_read = (double*)realloc(ML0_read, sizeof(double) * nElem);
+						MF231 = (double*)realloc(MF231, sizeof(double) * nElem);
 						ML1 = (double*)realloc(ML1, sizeof(double) * nElem);
 						timeStamps = (double*)realloc(timeStamps, sizeof(double) * nElem);
 					}
@@ -60,7 +64,7 @@ void main()
 				READ_HDR(&hdr);
 				READ_MSG(MF231); //now we allocated the memory for MF231 => read the trajectory
 				pFeeder.writeToDrive(ML0, MF231, nElem); //start feeding the trajectory to the drive, blocks until the trajectory has finished executing
-				pFeeder.readFromDrive(timeStamps, ML0, ML1, &nElem); //copy back RTV of interest that were saved during each callback during trajectory execution
+				pFeeder.readFromDrive(timeStamps, ML0_read, ML1, &nElem); //copy back RTV of interest that were saved during each callback during trajectory execution
 
 				//send the values back to Windows
 				MsgHeader w;
@@ -68,7 +72,7 @@ void main()
 				w.mLen = sizeof(double) * nElem;
 				WRITE_MSG(&w, (char*)timeStamps); //write values to the dual-channel communication object, will block until space is valid in the buffer
 				w.mType = _ML0;
-				WRITE_MSG(&w, (char*)ML0);
+				WRITE_MSG(&w, (char*)ML0_read);
 				w.mType = _ML1;
 				WRITE_MSG(&w, (char*)ML1);
 			}
