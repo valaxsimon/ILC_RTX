@@ -13,7 +13,7 @@ class Etel_ILC:
         #load the dll
         ilcDll = ctypes.WinDLL("C:\\Code\\ABR\\ILC\\ILC_WINDOWS_SIDE\\x64\\Debug\\ILC_DLL.dll");
         self.CExecuteTrajectory = ilcDll.CExecuteTrajectory
-        self.CExecuteTrajectory.argtypes = POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int)
+        self.CExecuteTrajectory.argtypes = POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_double), POINTER(c_int)
         self.CExecuteTrajectory.restype = c_int
         
         self.trajectory_file_path = trajectory_file_path
@@ -30,10 +30,11 @@ class Etel_ILC:
         self.traj_curr_ffw = []
         
         # c_double array data (for communication with RTX)
-        self.traj_pos_rtx = [] # c_double array theo position to be pass to RTX
+        self.traj_theoPos_write_rtx = [] # c_double array theo position to be pass to RTX
+        self.traj_theoPos_read_rtx = [] # c_double array theo position read from RTX
         self.traj_time_stamp_rtx = []
-        self.traj_real_pos_rtx = []
-        self.traj_curr_ffw_rtx = []
+        self.traj_realPos_read_rtx = []
+        self.traj_currFfw_write_rtx = []
 
         self.b = [] # Numerator polynomial coefficients
         self.a = [] # Denominator polynomial coefficients
@@ -57,22 +58,27 @@ class Etel_ILC:
         df = pd.read_csv(self.trajectory_file_path)
         
         self.traj_pos = df.M0.values
-        self.traj_pos_rtx = (c_double * self.nb_sample)()
-        self.traj_pos_rtx = self.convert_to_c_double_type(self.traj_pos)
-        
         self.traj_acc = df.M14.values
         self.nb_sample = df.M0.count()
+        
+        self.traj_theoPos_write_rtx = self.convert_to_c_double_type(self.traj_pos)
+        self.traj_theoPos_read_rtx = (c_double * self.nb_sample)() # allocate memory for the returned data
         self.traj_time_stamp_rtx = (c_double * self.nb_sample)()
-        self.traj_real_pos_rtx = (c_double * self.nb_sample)()
+        self.traj_realPos_read_rtx = (c_double * self.nb_sample)()
         del(df)
         
     def compute_acceleration_ffw(self):
-        self.traj_curr_ffw = np.multiply(self.traj_acc, (self.mass / self.kt))
-        self.traj_curr_ffw_rtx = self.convert_to_c_double_type(np.multiply(self.traj_acc, (self.mass / self.kt)))
+        #self.traj_curr_ffw = np.multiply(self.traj_acc, (self.mass / self.kt))
+        self.traj_currFfw_write_rtx = self.convert_to_c_double_type(np.multiply(self.traj_acc, (self.mass / self.kt)))
+        #self.traj_curr_ffw_rtx = self.convert_to_c_double_type(np.multiply(self.traj_acc, 0.49))
         
     def execute_trajectory(self):
-        self.CExecuteTrajectory(self.traj_time_stamp_rtx, self.traj_pos_rtx, self.traj_curr_ffw_rtx, 
-                           self.traj_real_pos_rtx, byref(c_int(self.nb_sample)))
+        self.CExecuteTrajectory(self.traj_time_stamp_rtx,
+                                self.traj_theoPos_write_rtx,
+                                self.traj_theoPos_read_rtx,
+                                self.traj_currFfw_write_rtx,
+                                self.traj_realPos_read_rtx,
+                                byref(c_int(self.nb_sample)))
         
     def debug_traj_pos_rtx(self):
         self.debug_val = np.empty(shape=(len(self.traj_pos_rtx)))

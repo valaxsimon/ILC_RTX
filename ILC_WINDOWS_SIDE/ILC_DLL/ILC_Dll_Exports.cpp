@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 
-int CExecuteTrajectory(double* timeStamps, double* ml0, double* mf231, double* ml1, int* n)
+int CExecuteTrajectory(double* timeStamps, double* ml0_write, double* ml0_rtv_read, double* mf231, double* ml1, int* n)
 {
 	try
 	{
@@ -13,7 +13,7 @@ int CExecuteTrajectory(double* timeStamps, double* ml0, double* mf231, double* m
 		MsgHeader h;
 		h.mType = _START;
 		h.mLen = sizeof(double) * (*n);
-		WRITE_MSG(&h, (char*)ml0);
+		WRITE_MSG(&h, (char*)ml0_write);
 		// !!!!!!!!!! Try to add a second message to the set the current FFW values !!!!!!!!!
 		//READ_HDR(&h);
 		WRITE_MSG(&h, (char*)mf231);
@@ -28,7 +28,7 @@ int CExecuteTrajectory(double* timeStamps, double* ml0, double* mf231, double* m
 		//ml0
 		printf("CExecuteTrajectory, read ml0\n", n);
 		READ_HDR(&h);
-		READ_MSG(ml0);
+		READ_MSG(ml0_rtv_read);
 
 		//ml1
 		printf("CExecuteTrajectory, read ml1\n", n);
@@ -44,6 +44,6 @@ int CExecuteTrajectory(double* timeStamps, double* ml0, double* mf231, double* m
 	{
 
 	}
-	
+
 	return 0;
 }

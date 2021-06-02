@@ -22,9 +22,11 @@ void rtvHandlerCallback(DSA_DSMAX *pUltimet, int nCycle, int nb_read, DSA_RTV_DA
 
 		rtvVal = rPositionFeed->gTrajectory.mPosition[rPositionFeed->rtvInterruptNumber] * rPositionFeed->isoToInc;
 
+		//DEBUG("%d\n", rtvVal);
 		//for (int i = 0; i < rPositionFeed->gTrajectory.mLineNumber; i++) {
 		//	printf("%lf\n", rPositionFeed->gTrajectory.mPosition[i] * rPositionFeed->isoToInc);
 		//}
+		//printf("%d\n", rtvVal);
 
 		if (err = dsa_write_32bit_rtv_slot(rPositionFeed->posRefSlot, rtvVal))
 		{
@@ -79,6 +81,7 @@ void rtvHandlerCallback(DSA_DSMAX *pUltimet, int nCycle, int nb_read, DSA_RTV_DA
 		}
 
 		RtPulseEvent(rPositionFeed->mTrajectoryDone); //pulse and reset only once
+		//RtxLogging::getInstance()->flushtoScreenAndDestroy();
 	}
 
 	++rPositionFeed->rtvInterruptNumber;

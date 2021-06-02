@@ -7,6 +7,6 @@
 #define ILC_DLL_EXPORTS_API __declspec(dllimport)
 #endif
 
-ILC_DLL_EXPORTS_API int CExecuteTrajectory(double* timeStamps, double* ml0, double* mf231, double* ml1, int* n);
+ILC_DLL_EXPORTS_API int CExecuteTrajectory(double* timeStamps, double* ml0_write, double* ml0_rtv_read, double* mf231, double* ml1, int* n);
 
 #endif // ILC_DLL_EXPORTS_HPP
