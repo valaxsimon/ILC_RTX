@@ -39,6 +39,7 @@ class Etel_ILC:
         self.traj_theoPos_write_rtx = [] # c_double array theo position to be pass to RTX
         self.traj_theoPos_read_rtx = [] # c_double array theo position read from RTX
         self.traj_time_stamp_rtx = []
+        
         self.traj_realPos_read_rtx = []
         self.traj_currFfw_write_rtx = []
 
